@@ -1,68 +1,142 @@
-
+ 
 
 
 # 4-bit Arithmetic Logic Unit (ALU)
 
-A 4-bit Arithmetic Logic Unit (ALU) designed and implemented using **Verilog HDL**.  
-The project demonstrates fundamental digital design concepts including arithmetic operations, logic operations, shifting, and status flag generation.
+module ALU (
+    input  [3:0] A,
+    input  [3:0] B,
+    input  [2:0] ALU_Sel,
+    output reg [3:0] Result,
+    output reg       Carry,
+    output           Zero
+);
 
-## 📌 Project Overview
+always @(*) begin
+    Result = 4'b0000;
+    Carry  = 1'b0;
 
-An Arithmetic Logic Unit is a fundamental component of a digital processor. It performs arithmetic and logical operations on binary data based on control signals.
+    case (ALU_Sel)
 
-In this project, a **4-bit ALU** is designed to perform eight different operations selected using a 3-bit control signal.
+        3'b000: begin
+            {Carry, Result} = A + B;       // Addition
+        end
 
-## ✨ Features
+        3'b001: begin
+            {Carry, Result} = A - B;       // Subtraction
+        end
 
-- 4-bit input operands
-- 8 selectable operations
-- Arithmetic operations
-- Bitwise logical operations
-- Left and right shift operations
-- Carry flag generation
-- Zero flag generation
-- Combinational RTL design
-- Verilog testbench for functional verification
+        3'b010: begin
+            Result = A & B;                // AND
+        end
 
-## 🧩 ALU Operations
+        3'b011: begin
+            Result = A | B;                // OR
+        end
 
-| ALU_Sel | Operation | Description |
-|:------:|-----------|-------------|
-| `000` | Addition | Adds A and B |
-| `001` | Subtraction | Subtracts B from A |
-| `010` | AND | Bitwise AND of A and B |
-| `011` | OR | Bitwise OR of A and B |
-| `100` | XOR | Bitwise XOR of A and B |
-| `101` | NOT | Bitwise complement of A |
-| `110` | Left Shift | Shifts A left by one bit |
-| `111` | Right Shift | Shifts A right by one bit |
+        3'b100: begin
+            Result = A ^ B;                // XOR
+        end
 
-## 🔌 Inputs and Outputs
+        3'b101: begin
+            Result = ~A;                   // NOT
+        end
 
-### Inputs
+        3'b110: begin
+            Result = A << 1;               // Left Shift
+        end
 
-| Signal | Width | Description |
-|--------|:-----:|-------------|
-| `A` | 4-bit | First input operand |
-| `B` | 4-bit | Second input operand |
-| `ALU_Sel` | 3-bit | Operation selection signal |
+        3'b111: begin
+            Result = A >> 1;               // Right Shift
+        end
 
-### Outputs
+        default: begin
+            Result = 4'b0000;
+            Carry  = 1'b0;
+        end
 
-| Signal | Width | Description |
-|--------|:-----:|-------------|
-| `Result` | 4-bit | Result of the selected operation |
-| `Carry` | 1-bit | Carry/borrow-related status output |
-| `Zero` | 1-bit | Indicates whether the result is zero |
+    endcase
+end
 
-## 🏗️ Design Architecture
+assign Zero = (Result == 4'b0000);
 
-```text
-             ┌──────────────────┐
-     A ─────►│                  │
-             │                  │
-     B ─────►│      4-bit       │─────► Result
-             │       ALU        │
- ALU_Sel ───►│                  │─────► Carry
-             │                  │─────► Zero
-             └──────────────────┘
+endmodule
+
+
+#testbench
+`timescale 1ns/1ps
+
+module ALU_tb;
+
+reg  [3:0] A;
+reg  [3:0] B;
+reg  [2:0] ALU_Sel;
+
+wire [3:0] Result;
+wire       Carry;
+wire       Zero;
+
+ALU uut (
+    .A(A),
+    .B(B),
+    .ALU_Sel(ALU_Sel),
+    .Result(Result),
+    .Carry(Carry),
+    .Zero(Zero)
+);
+
+initial begin
+
+    // Addition
+    A = 4'b0101;
+    B = 4'b0011;
+    ALU_Sel = 3'b000;
+    #10;
+
+    // Subtraction
+    A = 4'b1000;
+    B = 4'b0011;
+    ALU_Sel = 3'b001;
+    #10;
+
+    // AND
+    A = 4'b1100;
+    B = 4'b1010;
+    ALU_Sel = 3'b010;
+    #10;
+
+    // OR
+    A = 4'b1100;
+    B = 4'b1010;
+    ALU_Sel = 3'b011;
+    #10;
+
+    // XOR
+    A = 4'b1100;
+    B = 4'b1010;
+    ALU_Sel = 3'b100;
+    #10;
+
+    // NOT
+    A = 4'b1010;
+    B = 4'b0000;
+    ALU_Sel = 3'b101;
+    #10;
+
+    // Left Shift
+    A = 4'b0011;
+    B = 4'b0000;
+    ALU_Sel = 3'b110;
+    #10;
+
+    // Right Shift
+    A = 4'b1100;
+    B = 4'b0000;
+    ALU_Sel = 3'b111;
+    #10;
+
+    $finish;
+end
+
+endmodule
+
